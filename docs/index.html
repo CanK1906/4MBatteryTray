@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4MBatteryTray — Microsoft Modern Mobile Mouse BLE Battery Monitor</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      max-width: 780px;
+      margin: 48px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #1f2328;
+      background: #ffffff;
+    }
+    h1, h2 { line-height: 1.25; }
+    code, pre {
+      background: #f6f8fa;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    code { padding: 2px 6px; }
+    pre { padding: 14px; overflow-x: auto; }
+    .btn {
+      display: inline-block;
+      margin-top: 8px;
+      margin-right: 10px;
+      padding: 10px 16px;
+      background: #0969da;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .btn.secondary {
+      background: #eff2f5;
+      color: #1f2328;
+      border: 1px solid #d0d7de;
+    }
+    .box {
+      background: #f6f8fa;
+      border-left: 4px solid #0969da;
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .disclaimer {
+      font-size: 0.92rem;
+      color: #57606a;
+      border-top: 1px solid #d8dee4;
+      padding-top: 18px;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+  <h1>4MBatteryTray</h1>
+  <p>
+    A lightweight open-source Windows system tray utility that monitors the battery percentage of the
+    <strong>Microsoft Modern Mobile Mouse</strong> over Bluetooth Low Energy (BLE) using GATT Battery Service
+    (<code>0x180F</code>) and Battery Level Characteristic (<code>0x2A19</code>).
+  </p>
+
+  <div>
+    <a class="btn" href="https://github.com/CanK1906/4MBatteryTray/releases/tag/v1.0">Download v1.0 (.exe)</a>
+    <a class="btn secondary" href="https://github.com/CanK1906/4MBatteryTray">View Source on GitHub</a>
+  </div>
+
+  <div class="box">
+    <strong>v1.0 SHA256 Checksum (<code>4MBatteryTray.exe</code>):</strong>
+    <pre><code>A49177704FEB239203A3421EA1AF62388D5EB4825E6BBFEF4169B29C37789233</code></pre>
+  </div>
+
+  <h2>Key Features</h2>
+  <ul>
+    <li>Dynamic Windows system tray icon showing current battery percentage and status details.</li>
+    <li>Configurable low battery alert threshold (<code>10%</code>, <code>15%</code>, <code>20%</code>, <code>25%</code>) with <code>+5%</code> recovery hysteresis.</li>
+    <li>Configurable refresh intervals (<code>1 min</code>, <code>5 min</code>, <code>15 min</code>, <code>30 min</code>) saved in <code>%AppData%\4MBatteryTray\settings.json</code>.</li>
+    <li>Optional startup entry via <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</code>.</li>
+    <li>Distributed as a self-contained single-file <code>.exe</code> targeting <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>).</li>
+  </ul>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> <code>4MBatteryTray</code> is an independent open-source project and is <strong>not</strong>
+    an official Microsoft product, nor is it affiliated with, endorsed, or sponsored by Microsoft Corporation.
+    "Microsoft" and "Modern Mobile Mouse" are trademarks of Microsoft Corporation. Released under the MIT License.
+  </div>
+</body>
+</html>
