@@ -61,6 +61,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 0 36px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .brand {
@@ -89,6 +91,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .icon-btn {
@@ -162,6 +165,8 @@
       text-decoration: none;
       box-shadow: 0 10px 25px var(--accent-glow);
       transition: background-color 0.2s ease, transform 0.15s ease;
+      border: none;
+      cursor: pointer;
     }
 
     .btn-primary:hover {
@@ -181,6 +186,8 @@
       font-weight: 600;
       text-decoration: none;
       transition: border-color 0.2s ease, transform 0.15s ease;
+      cursor: pointer;
+      font-size: 0.95rem;
     }
 
     .btn-secondary:hover {
@@ -188,7 +195,6 @@
       transform: translateY(-1px);
     }
 
-    /* Windows Tray Preview Card */
     .tray-mockup {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -205,6 +211,7 @@
       font-size: 0.82rem;
       color: var(--text-muted);
       margin-bottom: 14px;
+      gap: 8px;
     }
 
     .menu-window {
@@ -221,6 +228,7 @@
       align-items: center;
       padding: 8px 10px;
       border-radius: 8px;
+      gap: 8px;
     }
 
     .menu-item.muted { color: var(--text-muted); font-size: 0.84rem; }
@@ -241,6 +249,7 @@
       align-items: center;
       font-size: 0.82rem;
       color: var(--text-muted);
+      gap: 8px;
     }
 
     .tray-pill {
@@ -267,7 +276,7 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 18px;
-      margin: 28px 0 36px;
+      margin: 28px 0 28px;
     }
 
     .card {
@@ -286,6 +295,45 @@
       margin: 0;
       color: var(--text-muted);
       font-size: 0.94rem;
+    }
+
+    .info-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+
+    .info-panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.18rem;
+    }
+
+    .info-panel p {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      font-size: 0.94rem;
+    }
+
+    .steps-list {
+      margin: 0 0 14px;
+      padding-left: 20px;
+      color: var(--text-muted);
+      font-size: 0.94rem;
+    }
+
+    .steps-list li {
+      margin-bottom: 6px;
+    }
+
+    .compat-bar {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      color: var(--text);
     }
 
     code {
@@ -326,16 +374,134 @@
       color: var(--accent);
     }
 
+    /* Source Code Viewer Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      padding: 24px 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .viewer-modal {
+      width: 100%;
+      max-width: 960px;
+      max-height: 86vh;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .viewer-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .file-select {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.86rem;
+      max-width: 340px;
+    }
+
+    .code-viewer-pre {
+      margin: 0;
+      padding: 18px;
+      background: var(--code-bg);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      overflow: auto;
+      flex: 1;
+      white-space: pre;
+    }
+
     footer {
       border-top: 1px solid var(--border);
-      padding-top: 22px;
+      padding-top: 24px;
       color: var(--text-muted);
       font-size: 0.88rem;
+    }
+
+    .footer-contact {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .contact-card {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+
+    .contact-card.open {
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
     @media (max-width: 820px) {
       .hero { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
+      .file-select { max-width: 100%; width: 100%; }
     }
   </style>
 </head>
@@ -347,33 +513,34 @@
         <span>4MBatteryTray</span>
       </div>
       <div class="nav-actions">
+        <button class="icon-btn" id="langToggle" type="button">TR</button>
         <button class="icon-btn" id="themeToggle" type="button">Light Theme</button>
-        <a class="icon-btn" href="https://github.com/CanK1906/4MBatteryTray">GitHub</a>
+        <a class="icon-btn" id="navGithub" href="https://github.com/CanK1906/4MBatteryTray">GitHub</a>
       </div>
     </header>
 
     <section class="hero">
       <div>
-        <div class="pill">Open Source • Windows x64 • .NET 10</div>
-        <h1>Battery status for your Modern Mobile Mouse, right in the tray.</h1>
-        <p>
+        <div class="pill" id="heroPill">Open Source • Windows x64 • .NET 10</div>
+        <h1 id="heroTitle">Battery status for your Microsoft Modern Mobile Mouse, right in the tray.</h1>
+        <p id="heroDesc">
           <strong>4MBatteryTray</strong> reads the Bluetooth Low Energy GATT Battery Service
           (<code>0x180F</code> / <code>0x2A19</code>) and displays a live percentage icon in your Windows system tray—lightweight, self-contained, and zero background bloat.
         </p>
         <div class="cta-group">
-          <a class="btn-primary" href="https://github.com/CanK1906/4MBatteryTray/releases/tag/v1.0">
+          <a class="btn-primary" id="downloadBtn" href="https://github.com/CanK1906/4MBatteryTray/releases/download/v1.0/4MBatteryTray.exe" download>
             Download v1.0 (.exe)
           </a>
-          <a class="btn-secondary" href="https://github.com/CanK1906/4MBatteryTray">
+          <button class="btn-secondary" id="sourceBtn" type="button">
             Inspect Source Code
-          </a>
+          </button>
         </div>
       </div>
 
       <div class="tray-mockup" aria-label="Interactive Windows System Tray Preview">
         <div class="mockup-header">
-          <span>Interactive Tray Preview</span>
-          <span>Click battery pill to simulate</span>
+          <span id="previewTitle">Interactive Tray Preview</span>
+          <span id="previewHint">Click battery pill to simulate</span>
         </div>
         <div class="menu-window">
           <div class="menu-item">
@@ -381,25 +548,25 @@
             <span id="menuPct" style="color: var(--green); font-weight: 700;">84%</span>
           </div>
           <div class="menu-item muted">
-            <span>Status</span>
+            <span id="statusLabel">Status</span>
             <span id="menuStatus">Connected via BLE</span>
           </div>
           <div class="menu-divider"></div>
           <div class="menu-item">
-            <span>Refresh Now</span>
+            <span id="refreshLabel">Refresh Now</span>
             <span style="color: var(--text-muted);">↻</span>
           </div>
           <div class="menu-item">
-            <span>Settings (Threshold: 15% • 5 min)</span>
+            <span id="settingsLabel">Settings (Threshold: 15% • 5 min)</span>
             <span style="color: var(--text-muted);">▸</span>
           </div>
           <div class="menu-item">
-            <span>Launch with Windows</span>
+            <span id="startupLabel">Launch with Windows</span>
             <span style="color: var(--accent);">✓</span>
           </div>
         </div>
         <div class="taskbar">
-          <span>Windows System Tray</span>
+          <span id="taskbarLabel">Windows System Tray</span>
           <span class="tray-pill" id="trayPill" title="Click to toggle normal / low battery state">
             🔋 <span id="trayPct">84%</span>
           </span>
@@ -409,27 +576,39 @@
 
     <section class="grid">
       <div class="card">
-        <h3>Dynamic Tray Percentage Icon</h3>
-        <p>Renders the current battery level directly inside a color-coded Windows tray icon with detailed status on hover and click.</p>
+        <h3 id="feat1Title">Dynamic Tray Percentage Icon</h3>
+        <p id="feat1Desc">Renders the current battery level directly inside a color-coded Windows tray icon with detailed status on hover and click.</p>
       </div>
       <div class="card">
-        <h3>Smart Low-Battery Alerts</h3>
-        <p>Configurable alert threshold (<code>10%</code>, <code>15%</code>, <code>20%</code>, <code>25%</code>) with a <code>+5%</code> recovery hysteresis to prevent notification spam.</p>
+        <h3 id="feat2Title">Smart Low-Battery Alerts</h3>
+        <p id="feat2Desc">Configurable alert threshold (<code>10%</code>, <code>15%</code>, <code>20%</code>, <code>25%</code>) with a <code>+5%</code> recovery hysteresis to prevent notification spam.</p>
       </div>
       <div class="card">
-        <h3>Configurable Polling & Persistence</h3>
-        <p>Choose refresh intervals (<code>1</code>, <code>5</code>, <code>15</code>, or <code>30 min</code>) stored locally in <code>%AppData%\4MBatteryTray\settings.json</code>.</p>
+        <h3 id="feat3Title">Configurable Polling &amp; Persistence</h3>
+        <p id="feat3Desc">Choose refresh intervals (<code>1</code>, <code>5</code>, <code>15</code>, or <code>30 min</code>) stored locally in <code>%AppData%\4MBatteryTray\settings.json</code>.</p>
       </div>
       <div class="card">
-        <h3>Single-File Portable Executable</h3>
-        <p>Built on <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) as a self-contained single <code>.exe</code> with optional Windows startup integration.</p>
+        <h3 id="feat4Title">Single-File Portable Executable</h3>
+        <p id="feat4Desc">Built on <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) as a self-contained single <code>.exe</code> with optional Windows startup integration.</p>
+      </div>
+    </section>
+
+    <section class="info-panel" aria-labelledby="howToTitle">
+      <h2 id="howToTitle">How to Run &amp; SmartScreen Note</h2>
+      <ol class="steps-list">
+        <li id="step1">Pair and connect your <strong>Microsoft Modern Mobile Mouse</strong> to Windows over Bluetooth.</li>
+        <li id="step2">Download <code>4MBatteryTray.exe</code> and run it directly—no installation wizard required.</li>
+        <li id="step3">Because the executable is not signed with a commercial code-signing certificate, Windows SmartScreen may appear on first launch; click <strong>More info</strong> &rarr; <strong>Run anyway</strong> to proceed.</li>
+      </ol>
+      <div class="compat-bar" id="compatText">
+        <strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Microsoft Modern Mobile Mouse (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).
       </div>
     </section>
 
     <section class="checksum-box">
       <div class="checksum-top">
         <div>
-          <strong>Release Integrity — SHA256 Checksum (<code>v1.0 / 4MBatteryTray.exe</code>)</strong>
+          <strong id="checksumTitle">Release Integrity — SHA256 Checksum (<code>v1.0 / 4MBatteryTray.exe</code>)</strong>
         </div>
         <button class="icon-btn" id="copyHashBtn" type="button">Copy SHA256</button>
       </div>
@@ -437,53 +616,368 @@
     </section>
 
     <footer>
-      <p>
+      <div class="footer-contact">
+        <span id="authorCredit">Maintained by <strong>Yusuf Can Kaleoğlu</strong></span>
+        <div class="footer-actions">
+          <a class="icon-btn" id="issuesBtn" href="https://github.com/CanK1906/4MBatteryTray/issues" target="_blank" rel="noopener noreferrer">
+            Report an Issue
+          </a>
+          <button class="icon-btn" id="contactBtn" type="button" aria-expanded="false" aria-controls="contactCard">
+            Contact Us
+          </button>
+        </div>
+      </div>
+
+      <div class="contact-card" id="contactCard">
+        <strong id="contactHeading">Contact Form</strong>
+        <p id="contactSub" style="margin: 6px 0 12px; color: var(--text-muted); font-size: 0.9rem;">
+          <strong>Yusuf Can Kaleoğlu</strong> — Send a direct message without exposing an email address on the page.
+        </p>
+        <form action="https://formspree.io/f/moednelq" method="POST" style="display: grid; gap: 10px;">
+          <input class="form-input" id="contactEmailInput" type="email" name="email" placeholder="Your email address" required />
+          <textarea class="form-input" id="contactMsgInput" name="message" rows="3" placeholder="Your message..." required style="resize: vertical;"></textarea>
+          <button class="icon-btn" id="sendContactBtn" type="submit" style="justify-self: start;">Send Message</button>
+        </form>
+      </div>
+
+      <p id="footerDisclaimer">
         <strong>Disclaimer &amp; Trademark Notice:</strong> <code>4MBatteryTray</code> is an independent, community-developed open-source utility and is <strong>not</strong> affiliated with, endorsed, sponsored, or supported by Microsoft Corporation. "Microsoft" and "Modern Mobile Mouse" are trademarks of Microsoft Corporation. Licensed under the MIT License.
       </p>
     </footer>
   </div>
 
-  <script>
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("light");
-      themeToggle.textContent = document.body.classList.contains("light") ? "Dark Theme" : "Light Theme";
-    });
+  <!-- Source Code Viewer Modal -->
+  <div class="modal-backdrop" id="sourceModal" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+    <div class="viewer-modal">
+      <div class="viewer-header">
+        <strong id="viewerTitle">Source Code Browser — CanK1906/4MBatteryTray</strong>
+        <div class="viewer-controls">
+          <select class="file-select" id="fileSelect" aria-label="Select repository file"></select>
+          <button class="icon-btn" id="copyCodeBtn" type="button">Copy Code</button>
+          <a class="icon-btn" id="openRepoLink" href="https://github.com/CanK1906/4MBatteryTray" target="_blank" rel="noopener noreferrer">Open on GitHub</a>
+          <button class="icon-btn" id="closeModalBtn" type="button">✕</button>
+        </div>
+      </div>
+      <pre class="code-viewer-pre" id="codeOutput">Loading repository files...</pre>
+    </div>
+  </div>
 
+  <script>
+    const translations = {
+      en: {
+        pageTitle: "4MBatteryTray — Microsoft Modern Mobile Mouse BLE Battery Monitor",
+        langBtn: "TR",
+        themeLight: "Light Theme",
+        themeDark: "Dark Theme",
+        heroPill: "Open Source • Windows x64 • .NET 10",
+        heroTitle: "Battery status for your Microsoft Modern Mobile Mouse, right in the tray.",
+        heroDesc: "<strong>4MBatteryTray</strong> reads the Bluetooth Low Energy GATT Battery Service (<code>0x180F</code> / <code>0x2A19</code>) and displays a live percentage icon in your Windows system tray—lightweight, self-contained, and zero background bloat.",
+        downloadBtn: "Download v1.0 (.exe)",
+        sourceBtn: "Inspect Source Code",
+        previewTitle: "Interactive Tray Preview",
+        previewHint: "Click battery pill to simulate",
+        statusLabel: "Status",
+        statusNormal: "Connected via BLE",
+        statusLow: "Low battery alert (≤ 15%)",
+        refreshLabel: "Refresh Now",
+        settingsLabel: "Settings (Threshold: 15% • 5 min)",
+        startupLabel: "Launch with Windows",
+        taskbarLabel: "Windows System Tray",
+        trayTitle: "Click to toggle normal / low battery state",
+        feat1Title: "Dynamic Tray Percentage Icon",
+        feat1Desc: "Renders the current battery level directly inside a color-coded Windows tray icon with detailed status on hover and click.",
+        feat2Title: "Smart Low-Battery Alerts",
+        feat2Desc: "Configurable alert threshold (<code>10%</code>, <code>15%</code>, <code>20%</code>, <code>25%</code>) with a <code>+5%</code> recovery hysteresis to prevent notification spam.",
+        feat3Title: "Configurable Polling & Persistence",
+        feat3Desc: "Choose refresh intervals (<code>1</code>, <code>5</code>, <code>15</code>, or <code>30 min</code>) stored locally in <code>%AppData%\\4MBatteryTray\\settings.json</code>.",
+        feat4Title: "Single-File Portable Executable",
+        feat4Desc: "Built on <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) as a self-contained single <code>.exe</code> with optional Windows startup integration.",
+        howToTitle: "How to Run & SmartScreen Note",
+        step1: "Pair and connect your <strong>Microsoft Modern Mobile Mouse</strong> to Windows over Bluetooth.",
+        step2: "Download <code>4MBatteryTray.exe</code> and run it directly—no installation wizard required.",
+        step3: "Because the executable is not signed with a commercial code-signing certificate, Windows SmartScreen may appear on first launch; click <strong>More info</strong> &rarr; <strong>Run anyway</strong> to proceed.",
+        compatText: "<strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Microsoft Modern Mobile Mouse (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).",
+        checksumTitle: "Release Integrity — SHA256 Checksum (<code>v1.0 / 4MBatteryTray.exe</code>)",
+        copyHash: "Copy SHA256",
+        copiedHash: "Copied!",
+        authorCredit: "Maintained by <strong>Yusuf Can Kaleoğlu</strong>",
+        issuesBtn: "Report an Issue",
+        contactBtn: "Contact Us",
+        contactHeading: "Contact Form",
+        contactSub: "<strong>Yusuf Can Kaleoğlu</strong> — Send a direct message without exposing an email address on the page.",
+        emailPlaceholder: "Your email address",
+        msgPlaceholder: "Your message...",
+        sendBtn: "Send Message",
+        viewerTitle: "Source Code Browser — CanK1906/4MBatteryTray",
+        copyCode: "Copy Code",
+        copiedCode: "Copied!",
+        openRepo: "Open on GitHub",
+        loadingFiles: "Loading repository files from GitHub...",
+        loadingFile: "Loading file content...",
+        loadError: "Could not load file from GitHub API/Raw right now. Use 'Open on GitHub' to view directly.",
+        footerDisclaimer: "<strong>Disclaimer &amp; Trademark Notice:</strong> <code>4MBatteryTray</code> is an independent, community-developed open-source utility and is <strong>not</strong> affiliated with, endorsed, sponsored, or supported by Microsoft Corporation. \"Microsoft\" and \"Modern Mobile Mouse\" are trademarks of Microsoft Corporation. Licensed under the MIT License."
+      },
+      tr: {
+        pageTitle: "4MBatteryTray — Microsoft Modern Mobile Mouse BLE Pil Göstergesi",
+        langBtn: "EN",
+        themeLight: "Açık Tema",
+        themeDark: "Koyu Tema",
+        heroPill: "Açık Kaynak • Windows x64 • .NET 10",
+        heroTitle: "Microsoft Modern Mobile Mouse pil yüzdesi doğrudan sistem tepsinde.",
+        heroDesc: "<strong>4MBatteryTray</strong>, Bluetooth Low Energy GATT Pil Servisini (<code>0x180F</code> / <code>0x2A19</code>) okuyarak Windows sistem tepsisinde canlı yüzde simgesi gösterir; hafif, bağımsız ve gereksiz arka plan yükü olmadan çalışır.",
+        downloadBtn: "İndir v1.0 (.exe)",
+        sourceBtn: "Kaynak Kodu İncele",
+        previewTitle: "Etkileşimli Tepsi Önizlemesi",
+        previewHint: "Simüle etmek için pil göstergesine tıkla",
+        statusLabel: "Durum",
+        statusNormal: "BLE ile bağlı",
+        statusLow: "Düşük pil uyarısı (≤ %15)",
+        refreshLabel: "Şimdi Yenile",
+        settingsLabel: "Ayarlar (Eşik: %15 • 5 dk)",
+        startupLabel: "Windows ile Başlat",
+        taskbarLabel: "Windows Sistem Tepsisi",
+        trayTitle: "Normal / düşük pil durumunu değiştirmek için tıkla",
+        feat1Title: "Dinamik Tepsi Yüzde Simgesi",
+        feat1Desc: "Mevcut pil seviyesini renk kodlu Windows tepsi simgesi içinde gösterir; üzerine gelindiğinde ve tıklandığında ayrıntılı durum sunar.",
+        feat2Title: "Akıllı Düşük Pil Uyarıları",
+        feat2Desc: "Bildirim tekrarını önlemek için <code>+5%</code> kurtarma histerezisine sahip ayarlanabilir uyarı eşiği (<code>10%</code>, <code>15%</code>, <code>20%</code>, <code>25%</code>).",
+        feat3Title: "Ayarlanabilir Sorgulama ve Kayıt",
+        feat3Desc: "<code>%AppData%\\4MBatteryTray\\settings.json</code> dosyasında saklanan yenileme aralıkları (<code>1</code>, <code>5</code>, <code>15</code> veya <code>30 dk</code>).",
+        feat4Title: "Tek Dosyalı Taşınabilir Çalıştırılabilir",
+        feat4Desc: "İsteğe bağlı Windows başlangıç kaydı ile <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) hedefli bağımsız tek <code>.exe</code> olarak derlenir.",
+        howToTitle: "Nasıl Çalıştırılır ve SmartScreen Notu",
+        step1: "<strong>Microsoft Modern Mobile Mouse</strong> cihazınızı Bluetooth üzerinden Windows ile eşleştirin ve bağlayın.",
+        step2: "<code>4MBatteryTray.exe</code> dosyasını indirip doğrudan çalıştırın; kurulum sihirbazı gerekmez.",
+        step3: "Uygulama ticari kod imzalama sertifikasıyla imzalanmadığı için ilk açılışta Windows SmartScreen uyarısı çıkabilir; devam etmek için <strong>Ek bilgi</strong> &rarr; <strong>Yine de çalıştır</strong> seçeneğine tıklayın.",
+        compatText: "<strong>Uyumluluk:</strong> Bluetooth Low Energy (BLE) destekli Windows 10 / Windows 11 (x64) &bull; Microsoft Modern Mobile Mouse (GATT Pil Servisi <code>0x180F</code> / <code>0x2A19</code>).",
+        checksumTitle: "Sürüm Bütünlüğü — SHA256 Doğrulama Kodu (<code>v1.0 / 4MBatteryTray.exe</code>)",
+        copyHash: "SHA256 Kopyala",
+        copiedHash: "Kopyalandı!",
+        authorCredit: "Geliştirici: <strong>Yusuf Can Kaleoğlu</strong>",
+        issuesBtn: "Sorun Bildir",
+        contactBtn: "İletişim",
+        contactHeading: "İletişim Formu",
+        contactSub: "<strong>Yusuf Can Kaleoğlu</strong> — Sayfada açık e-posta adresi göstermeden doğrudan mesaj gönderin.",
+        emailPlaceholder: "E-posta adresiniz",
+        msgPlaceholder: "Mesajınız...",
+        sendBtn: "Mesaj Gönder",
+        viewerTitle: "Kaynak Kod Görüntüleyici — CanK1906/4MBatteryTray",
+        copyCode: "Kodu Kopyala",
+        copiedCode: "Kopyalandı!",
+        openRepo: "GitHub'da Aç",
+        loadingFiles: "Depo dosyaları GitHub'dan yükleniyor...",
+        loadingFile: "Dosya içeriği yükleniyor...",
+        loadError: "Dosya şu an GitHub üzerinden çekilemedi. Doğrudan görüntülemek için 'GitHub'da Aç' düğmesini kullanabilirsin.",
+        footerDisclaimer: "<strong>Yasal Uyarı ve Marka Bildirimi:</strong> <code>4MBatteryTray</code> bağımsız bir açık kaynak topluluk aracıdır; Microsoft Corporation ile resmi bir bağı yoktur, Microsoft tarafından desteklenmez veya onaylanmaz. \"Microsoft\" ve \"Modern Mobile Mouse\" Microsoft Corporation'ın ticari markalarıdır. MIT Lisansı ile sunulur."
+      }
+    };
+
+    const initialLang = (navigator.language || "").toLowerCase().startsWith("tr") ? "tr" : "en";
+    let currentLang = initialLang;
+    let isLow = false;
+    let treeLoaded = false;
+
+    const langToggle = document.getElementById("langToggle");
+    const themeToggle = document.getElementById("themeToggle");
     const trayPill = document.getElementById("trayPill");
     const trayPct = document.getElementById("trayPct");
     const menuPct = document.getElementById("menuPct");
     const menuStatus = document.getElementById("menuStatus");
-    let isLow = false;
+    const copyHashBtn = document.getElementById("copyHashBtn");
+    const hashValue = document.getElementById("hashValue").textContent.trim();
+    const contactBtn = document.getElementById("contactBtn");
+    const contactCard = document.getElementById("contactCard");
 
-    trayPill.addEventListener("click", () => {
-      isLow = !isLow;
+    const sourceBtn = document.getElementById("sourceBtn");
+    const sourceModal = document.getElementById("sourceModal");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const fileSelect = document.getElementById("fileSelect");
+    const codeOutput = document.getElementById("codeOutput");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const openRepoLink = document.getElementById("openRepoLink");
+
+    function updateThemeButtonLabel() {
+      const t = translations[currentLang];
+      const isLight = document.body.classList.contains("light");
+      themeToggle.textContent = isLight ? t.themeDark : t.themeLight;
+    }
+
+    function updateBatteryPreviewText() {
+      const t = translations[currentLang];
       if (isLow) {
-        trayPill.classList.add("low");
         trayPct.textContent = "12%";
         menuPct.textContent = "12%";
         menuPct.style.color = "var(--red)";
-        menuStatus.textContent = "Low battery alert (≤ 15%)";
+        menuStatus.textContent = t.statusLow;
       } else {
-        trayPill.classList.remove("low");
         trayPct.textContent = "84%";
         menuPct.textContent = "84%";
         menuPct.style.color = "var(--green)";
-        menuStatus.textContent = "Connected via BLE";
+        menuStatus.textContent = t.statusNormal;
+      }
+    }
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      document.documentElement.lang = lang;
+      document.title = t.pageTitle;
+      langToggle.textContent = t.langBtn;
+      document.getElementById("heroPill").textContent = t.heroPill;
+      document.getElementById("heroTitle").textContent = t.heroTitle;
+      document.getElementById("heroDesc").innerHTML = t.heroDesc;
+      document.getElementById("downloadBtn").textContent = t.downloadBtn;
+      sourceBtn.textContent = t.sourceBtn;
+      document.getElementById("previewTitle").textContent = t.previewTitle;
+      document.getElementById("previewHint").textContent = t.previewHint;
+      document.getElementById("statusLabel").textContent = t.statusLabel;
+      document.getElementById("refreshLabel").textContent = t.refreshLabel;
+      document.getElementById("settingsLabel").textContent = t.settingsLabel;
+      document.getElementById("startupLabel").textContent = t.startupLabel;
+      document.getElementById("taskbarLabel").textContent = t.taskbarLabel;
+      trayPill.title = t.trayTitle;
+      document.getElementById("feat1Title").textContent = t.feat1Title;
+      document.getElementById("feat1Desc").innerHTML = t.feat1Desc;
+      document.getElementById("feat2Title").textContent = t.feat2Title;
+      document.getElementById("feat2Desc").innerHTML = t.feat2Desc;
+      document.getElementById("feat3Title").textContent = t.feat3Title;
+      document.getElementById("feat3Desc").innerHTML = t.feat3Desc;
+      document.getElementById("feat4Title").textContent = t.feat4Title;
+      document.getElementById("feat4Desc").innerHTML = t.feat4Desc;
+      document.getElementById("howToTitle").textContent = t.howToTitle;
+      document.getElementById("step1").innerHTML = t.step1;
+      document.getElementById("step2").innerHTML = t.step2;
+      document.getElementById("step3").innerHTML = t.step3;
+      document.getElementById("compatText").innerHTML = t.compatText;
+      document.getElementById("checksumTitle").innerHTML = t.checksumTitle;
+      copyHashBtn.textContent = t.copyHash;
+      document.getElementById("authorCredit").innerHTML = t.authorCredit;
+      document.getElementById("issuesBtn").textContent = t.issuesBtn;
+      contactBtn.textContent = t.contactBtn;
+      document.getElementById("contactHeading").textContent = t.contactHeading;
+      document.getElementById("contactSub").innerHTML = t.contactSub;
+      document.getElementById("contactEmailInput").placeholder = t.emailPlaceholder;
+      document.getElementById("contactMsgInput").placeholder = t.msgPlaceholder;
+      document.getElementById("sendContactBtn").textContent = t.sendBtn;
+      document.getElementById("viewerTitle").textContent = t.viewerTitle;
+      copyCodeBtn.textContent = t.copyCode;
+      openRepoLink.textContent = t.openRepo;
+      document.getElementById("footerDisclaimer").innerHTML = t.footerDisclaimer;
+      updateThemeButtonLabel();
+      updateBatteryPreviewText();
+    }
+
+    async function loadFileContent(path) {
+      const t = translations[currentLang];
+      codeOutput.textContent = t.loadingFile;
+      openRepoLink.href = `https://github.com/CanK1906/4MBatteryTray/blob/main/${encodeURI(path)}`;
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/CanK1906/4MBatteryTray/main/${path}`);
+        if (!res.ok) throw new Error("Raw fetch failed");
+        codeOutput.textContent = await res.text();
+      } catch {
+        codeOutput.textContent = t.loadError;
+      }
+    }
+
+    async function loadRepoTree() {
+      const t = translations[currentLang];
+      if (treeLoaded) {
+        if (fileSelect.value) loadFileContent(fileSelect.value);
+        return;
+      }
+      codeOutput.textContent = t.loadingFiles;
+      try {
+        const res = await fetch("https://api.github.com/repos/CanK1906/4MBatteryTray/git/trees/main?recursive=1");
+        if (!res.ok) throw new Error("Tree fetch failed");
+        const data = await res.json();
+        const blobs = (data.tree || [])
+          .filter(item => item.type === "blob" && !/\.(png|jpg|jpeg|gif|ico|exe|dll|pdb|zip)$/i.test(item.path))
+          .map(item => item.path);
+
+        fileSelect.innerHTML = "";
+        blobs.forEach(path => {
+          const opt = document.createElement("option");
+          opt.value = path;
+          opt.textContent = path;
+          fileSelect.appendChild(opt);
+        });
+
+        treeLoaded = true;
+        const preferred = blobs.find(p => p.endsWith(".cs") || p.endsWith(".csproj")) || blobs[0];
+        if (preferred) {
+          fileSelect.value = preferred;
+          await loadFileContent(preferred);
+        } else {
+          codeOutput.textContent = t.loadError;
+        }
+      } catch {
+        codeOutput.textContent = t.loadError;
+      }
+    }
+
+    sourceBtn.addEventListener("click", () => {
+      sourceModal.classList.add("open");
+      loadRepoTree();
+    });
+
+    closeModalBtn.addEventListener("click", () => {
+      sourceModal.classList.remove("open");
+    });
+
+    sourceModal.addEventListener("click", (e) => {
+      if (e.target === sourceModal) {
+        sourceModal.classList.remove("open");
       }
     });
 
-    const copyHashBtn = document.getElementById("copyHashBtn");
-    const hashValue = document.getElementById("hashValue").textContent.trim();
+    fileSelect.addEventListener("change", () => {
+      if (fileSelect.value) loadFileContent(fileSelect.value);
+    });
+
+    copyCodeBtn.addEventListener("click", async () => {
+      const t = translations[currentLang];
+      try {
+        await navigator.clipboard.writeText(codeOutput.textContent);
+        copyCodeBtn.textContent = t.copiedCode;
+        setTimeout(() => { copyCodeBtn.textContent = t.copyCode; }, 1800);
+      } catch {
+        copyCodeBtn.textContent = "Select & Copy";
+      }
+    });
+
+    langToggle.addEventListener("click", () => {
+      applyLanguage(currentLang === "en" ? "tr" : "en");
+    });
+
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      updateThemeButtonLabel();
+    });
+
+    trayPill.addEventListener("click", () => {
+      isLow = !isLow;
+      trayPill.classList.toggle("low", isLow);
+      updateBatteryPreviewText();
+    });
+
+    contactBtn.addEventListener("click", () => {
+      const isOpen = contactCard.classList.toggle("open");
+      contactBtn.setAttribute("aria-expanded", String(isOpen));
+    });
+
     copyHashBtn.addEventListener("click", async () => {
+      const t = translations[currentLang];
       try {
         await navigator.clipboard.writeText(hashValue);
-        copyHashBtn.textContent = "Copied!";
-        setTimeout(() => { copyHashBtn.textContent = "Copy SHA256"; }, 1800);
+        copyHashBtn.textContent = t.copiedHash;
+        setTimeout(() => { copyHashBtn.textContent = t.copyHash; }, 1800);
       } catch {
         copyHashBtn.textContent = "Select & Copy";
       }
     });
+
+    applyLanguage(initialLang);
   </script>
 </body>
 </html>
