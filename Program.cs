@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
@@ -32,7 +34,7 @@ internal static class Program
         StartupManager.EnsureRegistered(AppName);
 
         AppSettings settings = SettingsStore.Load();
-        var provider = new ModernMobileMouseGattProvider();
+        var provider = new BleBatteryGattProvider();
         var batteryService = new BatteryDetectionService(provider);
         Application.Run(new TrayBatteryApp(batteryService, settings));
     }
@@ -42,6 +44,7 @@ public sealed class AppSettings
 {
     public int LowBatteryThreshold { get; set; } = 15;
     public int PollIntervalSeconds { get; set; } = 300;
+    public string? SelectedDeviceId { get; set; }
 }
 
 public static class SettingsStore
@@ -84,6 +87,11 @@ public static class SettingsStore
                 ? loaded.PollIntervalSeconds
                 : 300;
 
+            if (string.IsNullOrWhiteSpace(loaded.SelectedDeviceId))
+            {
+                loaded.SelectedDeviceId = null;
+            }
+
             return loaded;
         }
         catch
@@ -113,22 +121,69 @@ public static class SettingsStore
     }
 }
 
-public sealed record BatteryReading(int Percentage, string DeviceName);
+public sealed record BleDeviceCandidate(string Id, string Name, bool IsPreferredDefault);
 
-public sealed record ScanOutcome(BatteryReading? Reading, string SummaryText, DateTime CheckedAt);
+public sealed record BatteryReading(int Percentage, string DeviceId, string DeviceName);
 
-public sealed class ModernMobileMouseGattProvider
+public sealed record ScanOutcome(
+    BatteryReading? Reading,
+    string BaseSummaryText,
+    DateTime CheckedAt,
+    bool AnyMatchedDeviceFound,
+    List<BleDeviceCandidate> DiscoveredDevices);
+
+public sealed class BleBatteryGattProvider
 {
-    private const string CanonicalDeviceName = "Microsoft Modern Mobile Mouse";
+    private const string PreferredDefaultName = "Microsoft Modern Mobile Mouse";
 
     // Bluetooth SIG Battery Service (0x180F) and Battery Level Characteristic (0x2A19)
     private static readonly Guid BatteryServiceUuid = new("0000180f-0000-1000-8000-00805f9b34fb");
     private static readonly Guid BatteryLevelCharUuid = new("00002a19-0000-1000-8000-00805f9b34fb");
 
-    public async Task<ScanOutcome> ReadAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<BleDeviceCandidate>> ListPairedBleDevicesAsync(CancellationToken cancellationToken = default)
+    {
+        var results = new List<BleDeviceCandidate>();
+
+        try
+        {
+            string selector = BluetoothLEDevice.GetDeviceSelectorFromPairingState(true);
+            var deviceInfoList = await DeviceInformation.FindAllAsync(selector)
+                .AsTask(cancellationToken)
+                .WaitAsync(TimeSpan.FromSeconds(4), cancellationToken);
+
+            foreach (var info in deviceInfoList)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (string.IsNullOrWhiteSpace(info.Id))
+                {
+                    continue;
+                }
+
+                string cleanName = string.IsNullOrWhiteSpace(info.Name) ? "Unnamed BLE Device" : info.Name.Trim();
+                bool isPreferred = IsPreferredDefault(cleanName);
+                results.Add(new BleDeviceCandidate(info.Id, cleanName, isPreferred));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            // Return whatever was collected safely
+        }
+
+        return results
+            .OrderByDescending(d => d.IsPreferredDefault)
+            .ThenBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public async Task<ScanOutcome> ReadAsync(string? selectedDeviceId, CancellationToken cancellationToken = default)
     {
         DateTime checkedAt = DateTime.Now;
-        bool anyMatchedDeviceFound = false;
+        var discovered = new List<BleDeviceCandidate>();
+        bool anyCandidateFound = false;
 
         try
         {
@@ -140,19 +195,27 @@ public sealed class ModernMobileMouseGattProvider
             foreach (var deviceInfo in deviceInfoList)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                if (string.IsNullOrWhiteSpace(deviceInfo.Id) || !IsModernMobileMouse(deviceInfo.Name))
+                if (string.IsNullOrWhiteSpace(deviceInfo.Id))
                 {
                     continue;
                 }
 
-                anyMatchedDeviceFound = true;
+                string cleanName = string.IsNullOrWhiteSpace(deviceInfo.Name) ? "Unnamed BLE Device" : deviceInfo.Name.Trim();
+                discovered.Add(new BleDeviceCandidate(deviceInfo.Id, cleanName, IsPreferredDefault(cleanName)));
+            }
 
-                BatteryReading? reading = await TryReadSingleMouseAsync(deviceInfo.Id, deviceInfo.Name, cancellationToken);
+            List<BleDeviceCandidate> orderedTargets = BuildTargetOrder(discovered, selectedDeviceId);
+
+            foreach (var target in orderedTargets)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                anyCandidateFound = true;
+
+                BatteryReading? reading = await TryReadSingleDeviceAsync(target.Id, target.Name, cancellationToken);
                 if (reading is not null && reading.Percentage is >= 0 and <= 100)
                 {
                     string summary = $"{checkedAt:HH:mm:ss} — {reading.Percentage}% - {reading.DeviceName}";
-                    return new ScanOutcome(reading, summary, checkedAt);
+                    return new ScanOutcome(reading, summary, checkedAt, true, discovered);
                 }
             }
         }
@@ -165,16 +228,51 @@ public sealed class ModernMobileMouseGattProvider
             // Return safe status on timeouts or access errors
         }
 
-        string statusText = anyMatchedDeviceFound
-            ? $"{checkedAt:HH:mm:ss} — {CanonicalDeviceName} (Disconnected or sleeping)"
-            : $"{checkedAt:HH:mm:ss} — {CanonicalDeviceName} (Not found)";
+        string targetLabel = GetTargetLabel(discovered, selectedDeviceId);
+        string statusText = anyCandidateFound
+            ? $"{checkedAt:HH:mm:ss} — {targetLabel} (Disconnected or sleeping)"
+            : $"{checkedAt:HH:mm:ss} — {targetLabel} (Not found)";
 
-        return new ScanOutcome(null, statusText, checkedAt);
+        return new ScanOutcome(null, statusText, checkedAt, anyCandidateFound, discovered);
     }
 
-    private static async Task<BatteryReading?> TryReadSingleMouseAsync(
+    private static List<BleDeviceCandidate> BuildTargetOrder(
+        List<BleDeviceCandidate> discovered,
+        string? selectedDeviceId)
+    {
+        if (!string.IsNullOrWhiteSpace(selectedDeviceId))
+        {
+            var explicitMatch = discovered.Where(d => string.Equals(d.Id, selectedDeviceId, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (explicitMatch.Count > 0)
+            {
+                return explicitMatch;
+            }
+        }
+
+        // Auto mode: prioritize Modern Mobile Mouse first, then any other paired BLE device
+        return discovered
+            .OrderByDescending(d => d.IsPreferredDefault)
+            .ThenBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string GetTargetLabel(List<BleDeviceCandidate> discovered, string? selectedDeviceId)
+    {
+        if (!string.IsNullOrWhiteSpace(selectedDeviceId))
+        {
+            var matched = discovered.FirstOrDefault(d => string.Equals(d.Id, selectedDeviceId, StringComparison.OrdinalIgnoreCase));
+            if (matched is not null)
+            {
+                return matched.Name;
+            }
+        }
+
+        return PreferredDefaultName;
+    }
+
+    private static async Task<BatteryReading?> TryReadSingleDeviceAsync(
         string deviceId,
-        string? deviceName,
+        string deviceName,
         CancellationToken cancellationToken)
     {
         BluetoothLEDevice? bleDevice = null;
@@ -192,10 +290,7 @@ public sealed class ModernMobileMouseGattProvider
                 return null;
             }
 
-            if (!IsModernMobileMouse(bleDevice.Name ?? deviceName))
-            {
-                return null;
-            }
+            string resolvedName = string.IsNullOrWhiteSpace(bleDevice.Name) ? deviceName : bleDevice.Name.Trim();
 
             var servicesResult = await bleDevice.GetGattServicesForUuidAsync(
                     BatteryServiceUuid,
@@ -236,7 +331,7 @@ public sealed class ModernMobileMouseGattProvider
                             byte level = reader.ReadByte();
                             if (level <= 100)
                             {
-                                return new BatteryReading(level, CanonicalDeviceName);
+                                return new BatteryReading(level, deviceId, resolvedName);
                             }
                         }
                     }
@@ -255,7 +350,7 @@ public sealed class ModernMobileMouseGattProvider
         return null;
     }
 
-    private static bool IsModernMobileMouse(string? name)
+    private static bool IsPreferredDefault(string? name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -268,16 +363,21 @@ public sealed class ModernMobileMouseGattProvider
 
 public sealed class BatteryDetectionService
 {
-    private readonly ModernMobileMouseGattProvider _provider;
+    private readonly BleBatteryGattProvider _provider;
 
-    public BatteryDetectionService(ModernMobileMouseGattProvider provider)
+    public BatteryDetectionService(BleBatteryGattProvider provider)
     {
         _provider = provider;
     }
 
-    public Task<ScanOutcome> ScanBatteryAsync(CancellationToken cancellationToken = default)
+    public Task<ScanOutcome> ScanBatteryAsync(string? selectedDeviceId, CancellationToken cancellationToken = default)
     {
-        return _provider.ReadAsync(cancellationToken);
+        return _provider.ReadAsync(selectedDeviceId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<BleDeviceCandidate>> ListDevicesAsync(CancellationToken cancellationToken = default)
+    {
+        return _provider.ListPairedBleDevicesAsync(cancellationToken);
     }
 }
 
@@ -349,6 +449,10 @@ public static class StartupManager
 
 public sealed class TrayBatteryApp : ApplicationContext
 {
+    private const int InitialBackoffSeconds = 15;
+    private const int MaxBackoffSeconds = 300;
+    private const int WakeRecoveryDelayMilliseconds = 2000;
+
     private static readonly int[] ThresholdOptions = [10, 15, 20, 25];
     private static readonly (string Label, int Seconds)[] IntervalOptions =
     [
@@ -362,19 +466,30 @@ public sealed class TrayBatteryApp : ApplicationContext
     private readonly AppSettings _settings;
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _pollTimer;
+    private readonly Control _uiMarshalControl;
+    private readonly CancellationTokenSource _lifetimeCts = new();
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly ToolStripMenuItem _startupMenuItem;
     private readonly ToolStripMenuItem _statusMenuItem;
+    private readonly ToolStripMenuItem _deviceSubMenu;
     private readonly ToolStripMenuItem[] _thresholdMenuItems;
     private readonly ToolStripMenuItem[] _intervalMenuItems;
+
     private ScanOutcome? _lastOutcome;
     private Icon? _currentIcon;
-    private bool _isRefreshing;
     private bool _lowBatteryNotifiedForCurrentDrop;
+    private bool _isExiting;
+    private int _currentBackoffSeconds;
+    private int? _activeRetryInSeconds;
 
     public TrayBatteryApp(BatteryDetectionService batteryService, AppSettings settings)
     {
         _batteryService = batteryService;
         _settings = settings;
+
+        // Hidden window handle used to safely marshal SystemEvents callbacks onto UI thread
+        _uiMarshalControl = new Control();
+        _ = _uiMarshalControl.Handle;
 
         _statusMenuItem = new ToolStripMenuItem("Status: Initializing...")
         {
@@ -390,6 +505,10 @@ public sealed class TrayBatteryApp : ApplicationContext
             StartupManager.Toggle(Program.AppName);
             _startupMenuItem.Checked = StartupManager.IsRegistered(Program.AppName);
         };
+
+        _deviceSubMenu = new ToolStripMenuItem("BLE Device");
+        _deviceSubMenu.DropDownOpening += async (_, _) => await PopulateDeviceMenuAsync();
+        RebuildDeviceMenuItems([]);
 
         var thresholdSubMenu = new ToolStripMenuItem("Low Battery Threshold");
         _thresholdMenuItems = new ToolStripMenuItem[ThresholdOptions.Length];
@@ -420,13 +539,14 @@ public sealed class TrayBatteryApp : ApplicationContext
         }
 
         var settingsMenu = new ToolStripMenuItem("Settings");
+        settingsMenu.DropDownItems.Add(_deviceSubMenu);
         settingsMenu.DropDownItems.Add(thresholdSubMenu);
         settingsMenu.DropDownItems.Add(intervalSubMenu);
 
         var contextMenu = new ContextMenuStrip();
         contextMenu.Items.Add(_statusMenuItem);
         contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add("Refresh Now", null, async (_, _) => await RefreshBatteryAsync());
+        contextMenu.Items.Add("Refresh Now", null, async (_, _) => await RefreshBatteryAsync(resetBackoff: true));
         contextMenu.Items.Add(settingsMenu);
         contextMenu.Items.Add(_startupMenuItem);
         contextMenu.Items.Add(new ToolStripSeparator());
@@ -434,16 +554,130 @@ public sealed class TrayBatteryApp : ApplicationContext
 
         _notifyIcon = new NotifyIcon
         {
-            Text = "Microsoft Modern Mobile Mouse: Checking...",
+            Text = "BLE Battery: Checking...",
             ContextMenuStrip = contextMenu,
             Visible = true
         };
 
         _pollTimer = new System.Windows.Forms.Timer { Interval = _settings.PollIntervalSeconds * 1000 };
-        _pollTimer.Tick += async (_, _) => await RefreshBatteryAsync();
-        _pollTimer.Start();
+        _pollTimer.Tick += async (_, _) => await RefreshBatteryAsync(resetBackoff: false);
 
-        _ = RefreshBatteryAsync();
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
+
+        _pollTimer.Start();
+        _ = RefreshBatteryAsync(resetBackoff: true);
+    }
+
+    private async Task PopulateDeviceMenuAsync()
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<BleDeviceCandidate> devices = _lastOutcome?.DiscoveredDevices is { Count: > 0 }
+                ? _lastOutcome.DiscoveredDevices
+                : await _batteryService.ListDevicesAsync(_lifetimeCts.Token);
+
+            if (_isExiting)
+            {
+                return;
+            }
+
+            RebuildDeviceMenuItems(devices);
+        }
+        catch (OperationCanceledException)
+        {
+            // Shutting down
+        }
+    }
+
+    private void RebuildDeviceMenuItems(IReadOnlyList<BleDeviceCandidate> devices)
+    {
+        _deviceSubMenu.DropDownItems.Clear();
+
+        var autoItem = new ToolStripMenuItem("Auto (Modern Mobile Mouse first)")
+        {
+            Checked = string.IsNullOrWhiteSpace(_settings.SelectedDeviceId)
+        };
+        autoItem.Click += async (_, _) => await SelectDeviceAsync(null);
+        _deviceSubMenu.DropDownItems.Add(autoItem);
+
+        if (devices.Count > 0)
+        {
+            _deviceSubMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            foreach (var device in devices)
+            {
+                bool isSelected = !string.IsNullOrWhiteSpace(_settings.SelectedDeviceId) &&
+                                  string.Equals(_settings.SelectedDeviceId, device.Id, StringComparison.OrdinalIgnoreCase);
+
+                var item = new ToolStripMenuItem(device.Name)
+                {
+                    Checked = isSelected
+                };
+                string capturedId = device.Id;
+                item.Click += async (_, _) => await SelectDeviceAsync(capturedId);
+                _deviceSubMenu.DropDownItems.Add(item);
+            }
+        }
+    }
+
+    private async Task SelectDeviceAsync(string? deviceId)
+    {
+        _settings.SelectedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId;
+        SettingsStore.Save(_settings);
+        _lowBatteryNotifiedForCurrentDrop = false;
+
+        if (_lastOutcome?.DiscoveredDevices is not null)
+        {
+            RebuildDeviceMenuItems(_lastOutcome.DiscoveredDevices);
+        }
+
+        await RefreshBatteryAsync(resetBackoff: true);
+    }
+
+    private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e)
+    {
+        if (_isExiting || e.Mode != PowerModes.Resume)
+        {
+            return;
+        }
+
+        if (_uiMarshalControl.IsHandleCreated && !_uiMarshalControl.IsDisposed)
+        {
+            _uiMarshalControl.BeginInvoke(() => _ = HandleSystemResumeAsync());
+        }
+    }
+
+    private async Task HandleSystemResumeAsync()
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        _currentBackoffSeconds = 0;
+        _activeRetryInSeconds = null;
+        _pollTimer.Stop();
+
+        try
+        {
+            await Task.Delay(WakeRecoveryDelayMilliseconds, _lifetimeCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (_isExiting)
+        {
+            return;
+        }
+
+        await RefreshBatteryAsync(resetBackoff: true);
     }
 
     private void SetLowBatteryThreshold(int threshold)
@@ -460,7 +694,7 @@ public sealed class TrayBatteryApp : ApplicationContext
 
         if (_lastOutcome is not null)
         {
-            UpdateTrayIcon(_lastOutcome);
+            UpdateTrayAppearance(_lastOutcome);
             EvaluateLowBatteryNotification(_lastOutcome.Reading);
         }
     }
@@ -475,31 +709,125 @@ public sealed class TrayBatteryApp : ApplicationContext
             _intervalMenuItems[i].Checked = IntervalOptions[i].Seconds == seconds;
         }
 
-        _pollTimer.Stop();
-        _pollTimer.Interval = seconds * 1000;
-        _pollTimer.Start();
+        _currentBackoffSeconds = 0;
+        _activeRetryInSeconds = null;
+        RescheduleTimer(_settings.PollIntervalSeconds);
+
+        if (_lastOutcome is not null)
+        {
+            UpdateTrayAppearance(_lastOutcome);
+        }
     }
 
-    private async Task RefreshBatteryAsync()
+    private void RescheduleTimer(int intervalSeconds)
     {
-        if (_isRefreshing)
+        if (_isExiting)
         {
             return;
         }
 
-        _isRefreshing = true;
+        int clampedSeconds = Math.Max(5, intervalSeconds);
+        _pollTimer.Stop();
+        _pollTimer.Interval = clampedSeconds * 1000;
+        _pollTimer.Start();
+    }
+
+    private async Task RefreshBatteryAsync(bool resetBackoff)
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        if (!await _refreshLock.WaitAsync(0))
+        {
+            return;
+        }
+
         try
         {
-            ScanOutcome outcome = await _batteryService.ScanBatteryAsync();
+            if (_isExiting)
+            {
+                return;
+            }
+
+            if (resetBackoff)
+            {
+                _currentBackoffSeconds = 0;
+                _activeRetryInSeconds = null;
+            }
+
+            _pollTimer.Stop();
+
+            ScanOutcome outcome = await _batteryService.ScanBatteryAsync(_settings.SelectedDeviceId, _lifetimeCts.Token);
+            if (_isExiting)
+            {
+                return;
+            }
+
             _lastOutcome = outcome;
-            _statusMenuItem.Text = outcome.SummaryText;
-            UpdateTrayIcon(outcome);
+
+            if (outcome.Reading is not null)
+            {
+                _currentBackoffSeconds = 0;
+                _activeRetryInSeconds = null;
+                RescheduleTimer(_settings.PollIntervalSeconds);
+            }
+            else
+            {
+                _currentBackoffSeconds = _currentBackoffSeconds <= 0
+                    ? InitialBackoffSeconds
+                    : Math.Min(_currentBackoffSeconds * 2, MaxBackoffSeconds);
+
+                int nextDelaySeconds = Math.Min(_currentBackoffSeconds, _settings.PollIntervalSeconds);
+                _activeRetryInSeconds = nextDelaySeconds;
+                RescheduleTimer(nextDelaySeconds);
+            }
+
+            UpdateTrayAppearance(outcome);
             EvaluateLowBatteryNotification(outcome.Reading);
+        }
+        catch (OperationCanceledException)
+        {
+            // Application is shutting down
         }
         finally
         {
-            _isRefreshing = false;
+            if (_refreshLock.CurrentCount == 0)
+            {
+                _refreshLock.Release();
+            }
         }
+    }
+
+    private void UpdateTrayAppearance(ScanOutcome outcome)
+    {
+        string menuStatus = _activeRetryInSeconds.HasValue
+            ? $"{outcome.BaseSummaryText} | Retry in {_activeRetryInSeconds.Value}s (backoff)"
+            : outcome.BaseSummaryText;
+
+        _statusMenuItem.Text = menuStatus;
+
+        if (outcome.Reading is not null)
+        {
+            _notifyIcon.Text = TruncateNotifyText($"{outcome.Reading.DeviceName}: {outcome.Reading.Percentage}%");
+        }
+        else if (_activeRetryInSeconds.HasValue)
+        {
+            _notifyIcon.Text = TruncateNotifyText($"Retry in {_activeRetryInSeconds.Value}s — {outcome.BaseSummaryText}");
+        }
+        else
+        {
+            _notifyIcon.Text = TruncateNotifyText(outcome.BaseSummaryText);
+        }
+
+        UpdateTrayIcon(outcome);
+    }
+
+    private static string TruncateNotifyText(string text)
+    {
+        // Windows NotifyIcon.Text limit is 127 characters
+        return text.Length <= 127 ? text : text[..124] + "...";
     }
 
     private void EvaluateLowBatteryNotification(BatteryReading? reading)
@@ -532,10 +860,6 @@ public sealed class TrayBatteryApp : ApplicationContext
     {
         int? percent = outcome.Reading?.Percentage;
         string label = percent.HasValue ? $"{percent.Value}" : "--";
-
-        _notifyIcon.Text = outcome.Reading is not null
-            ? $"Microsoft Modern Mobile Mouse: {outcome.Reading.Percentage}%"
-            : outcome.SummaryText;
 
         int mediumThreshold = Math.Max(_settings.LowBatteryThreshold + 15, 35);
         Color bgColor = percent switch
@@ -578,7 +902,17 @@ public sealed class TrayBatteryApp : ApplicationContext
 
     private void ExitApp()
     {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        _isExiting = true;
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _pollTimer.Stop();
+        _pollTimer.Dispose();
+        _lifetimeCts.Cancel();
+
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
         if (_currentIcon is not null)
@@ -586,6 +920,10 @@ public sealed class TrayBatteryApp : ApplicationContext
             DestroyIcon(_currentIcon.Handle);
             _currentIcon.Dispose();
         }
+
+        _uiMarshalControl.Dispose();
+        _lifetimeCts.Dispose();
+        _refreshLock.Dispose();
 
         Application.Exit();
     }
