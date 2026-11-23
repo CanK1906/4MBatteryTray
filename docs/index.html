@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4MBatteryTray — BLE Battery Monitor for Modern Mobile Mouse &amp; Paired BLE Devices</title>
+  <title>4MBatteryTray — BLE Battery Monitor for Your Microsoft Modern Mobile Mouse</title>
   <style>
     :root {
       --bg: #0b0f17;
@@ -521,14 +521,14 @@
 
     <section class="hero">
       <div>
-        <div class="pill" id="heroPill">v2.0 • Open Source • Windows x64 • .NET 10</div>
-        <h1 id="heroTitle">Battery status for your Microsoft Modern Mobile Mouse &amp; BLE devices, right in the tray.</h1>
+        <div class="pill" id="heroPill">v3.0 • Open Source • Windows x64 • .NET 10</div>
+        <h1 id="heroTitle">Live battery monitoring for your Microsoft Modern Mobile Mouse, right in the tray.</h1>
         <p id="heroDesc">
-          <strong>4MBatteryTray v2.0</strong> reads Bluetooth Low Energy GATT Battery Service (<code>0x180F</code> / <code>0x2A19</code>) with wake-up auto refresh, exponential backoff retry visibility, and multi-device BLE selection—lightweight, self-contained, and zero background bloat.
+          <strong>4MBatteryTray</strong> is made specifically for the <strong>Microsoft Modern Mobile Mouse</strong>, reading GATT Battery Service (<code>0x180F</code> / <code>0x2A19</code>) over Bluetooth Low Energy to show live battery percentage, alerts, wake/backoff behavior, and usage history in your Windows system tray.
         </p>
         <div class="cta-group">
-          <a class="btn-primary" id="downloadBtn" href="https://github.com/CanK1906/4MBatteryTray/releases/download/v2.0/4MBatteryTray.exe" download>
-            Download v2.0 (.exe)
+          <a class="btn-primary" id="downloadBtn" href="https://github.com/CanK1906/4MBatteryTray/releases/download/v3.0/4MBatteryTray.exe" download>
+            Download v3.0 (.exe)
           </a>
           <button class="btn-secondary" id="sourceBtn" type="button">
             Inspect Source Code
@@ -548,7 +548,7 @@
           </div>
           <div class="menu-item muted">
             <span id="statusLabel">Status</span>
-            <span id="menuStatus">Connected via BLE</span>
+            <span id="menuStatus">Connected via BLE • ~18.5d (rough)</span>
           </div>
           <div class="menu-divider"></div>
           <div class="menu-item">
@@ -556,7 +556,11 @@
             <span style="color: var(--text-muted);">↻</span>
           </div>
           <div class="menu-item">
-            <span id="settingsLabel">Settings (Auto BLE • 15% • 5 min)</span>
+            <span id="statsLabel">Battery Stats (Cell #1: 4.2d)</span>
+            <span style="color: var(--text-muted);">▸</span>
+          </div>
+          <div class="menu-item">
+            <span id="settingsLabel">Settings (15% • 5 min)</span>
             <span style="color: var(--text-muted);">▸</span>
           </div>
           <div class="menu-item">
@@ -566,7 +570,7 @@
         </div>
         <div class="taskbar">
           <span id="taskbarLabel">Windows System Tray</span>
-          <span class="tray-pill" id="trayPill" title="Click to toggle normal / low battery state">
+          <span class="tray-pill" id="trayPill" title="Click to toggle connected / backoff state">
             🔋 <span id="trayPct">84%</span>
           </span>
         </div>
@@ -575,43 +579,43 @@
 
     <section class="grid">
       <div class="card">
-        <h3 id="feat1Title">Wake-Up Auto Refresh &amp; Dynamic Icon</h3>
-        <p id="feat1Desc">Automatically refreshes shortly after Windows resumes from sleep (<code>PowerModes.Resume</code>) and renders live percentage inside a color-coded tray icon.</p>
+        <h3 id="feat1Title">Tray Percentage &amp; Smart Alerts</h3>
+        <p id="feat1Desc">Shows the mouse battery percentage inside a color-coded tray icon with configurable low-battery alerts (<code>10%</code>–<code>25%</code>), <code>+5%</code> recovery hysteresis, selectable poll intervals, and Windows startup support.</p>
       </div>
       <div class="card">
-        <h3 id="feat2Title">Exponential Backoff &amp; Retry Visibility</h3>
-        <p id="feat2Desc">Backs off progressively (<code>15s</code> to <code>300s</code>, capped by refresh interval) when sleeping or disconnected, showing <code>Retry in Xs (backoff)</code> in menu and tooltip.</p>
+        <h3 id="feat2Title">Wake-Up Sync &amp; Backoff Retries</h3>
+        <p id="feat2Desc">Refreshes automatically after Windows wakes from sleep (<code>PowerModes.Resume</code>) and uses progressive backoff (<code>15s</code> to <code>300s</code>) with <code>Retry in Xs (backoff)</code> status while the mouse is asleep or disconnected.</p>
       </div>
       <div class="card">
-        <h3 id="feat3Title">Multi-Device BLE Selection</h3>
-        <p id="feat3Desc">Pick <strong>Auto (Modern Mobile Mouse first)</strong> or pin a paired BLE battery device under <strong>Settings &rarr; BLE Device</strong>, saved in <code>settings.json</code>.</p>
+        <h3 id="feat3Title">History Log, Cell Counter &amp; Estimate</h3>
+        <p id="feat3Desc">Records readings to <code>%AppData%\4MBatteryTray\battery-history.jsonl</code> (up to 5,000 entries), tracks active cell age with a reset counter, and shows a rough remaining battery estimate.</p>
       </div>
       <div class="card">
-        <h3 id="feat4Title">Low-Battery Alerts &amp; Portable .exe</h3>
-        <p id="feat4Desc">Configurable thresholds (<code>10%</code>–<code>25%</code>) with <code>+5%</code> recovery hysteresis, optional startup, and a single-file <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) binary.</p>
+        <h3 id="feat4Title">Lightweight &amp; Zero-Bloat .exe</h3>
+        <p id="feat4Desc">Built as a single self-contained <code>4MBatteryTray.exe</code> (<code>net10.0-windows10.0.22621.0</code>, <code>win-x64</code>) with no installer or heavy background services—staying light on system resources.</p>
       </div>
     </section>
 
     <section class="info-panel" aria-labelledby="howToTitle">
       <h2 id="howToTitle">How to Run &amp; SmartScreen Note</h2>
       <ol class="steps-list">
-        <li id="step1">Pair your <strong>Microsoft Modern Mobile Mouse</strong> or another BLE battery device via Windows Bluetooth settings (and optionally choose it under <strong>Settings &rarr; BLE Device</strong>).</li>
-        <li id="step2">Download <code>4MBatteryTray.exe</code> from <strong>v2.0</strong> and run it directly—no installation wizard required.</li>
+        <li id="step1">Pair and connect your <strong>Microsoft Modern Mobile Mouse</strong> with Windows over Bluetooth.</li>
+        <li id="step2">Download <code>4MBatteryTray.exe</code> from <strong>v3.0</strong> and run it directly—no setup wizard needed.</li>
         <li id="step3">Because the executable is not signed with a commercial code-signing certificate, Windows SmartScreen may appear on first launch; click <strong>More info</strong> &rarr; <strong>Run anyway</strong> to proceed.</li>
       </ol>
       <div class="compat-bar" id="compatText">
-        <strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Microsoft Modern Mobile Mouse &amp; paired BLE battery devices (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).
+        <strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Designed for the Microsoft Modern Mobile Mouse (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).
       </div>
     </section>
 
     <section class="checksum-box">
       <div class="checksum-top">
         <div>
-          <strong id="checksumTitle">Release Integrity — SHA256 Checksum (<code>v2.0 / 4MBatteryTray.exe</code>)</strong>
+          <strong id="checksumTitle">Release Integrity — SHA256 Checksum (<code>v3.0 / 4MBatteryTray.exe</code>)</strong>
         </div>
         <button class="icon-btn" id="copyHashBtn" type="button">Copy SHA256</button>
       </div>
-      <code class="hash-line" id="hashValue">AAA460D75FCF410A811B33FAEC61E35F789E2F8D66AB676483E5BEE3110FAFE9</code>
+      <code class="hash-line" id="hashValue">BC0DF2EDD5A1B0CBBE4D9E9DE24D376C9D2FC0058AC9DC0651910EDAE6794002</code>
     </section>
 
     <footer>
@@ -664,39 +668,40 @@
   <script>
     const translations = {
       en: {
-        pageTitle: "4MBatteryTray — BLE Battery Monitor for Modern Mobile Mouse & Paired BLE Devices",
+        pageTitle: "4MBatteryTray — BLE Battery Monitor for Your Microsoft Modern Mobile Mouse",
         langBtn: "TR",
         themeLight: "Light Theme",
         themeDark: "Dark Theme",
-        heroPill: "v2.0 • Open Source • Windows x64 • .NET 10",
-        heroTitle: "Battery status for your Microsoft Modern Mobile Mouse & BLE devices, right in the tray.",
-        heroDesc: "<strong>4MBatteryTray v2.0</strong> reads Bluetooth Low Energy GATT Battery Service (<code>0x180F</code> / <code>0x2A19</code>) with wake-up auto refresh, exponential backoff retry visibility, and multi-device BLE selection—lightweight, self-contained, and zero background bloat.",
-        downloadBtn: "Download v2.0 (.exe)",
+        heroPill: "v3.0 • Open Source • Windows x64 • .NET 10",
+        heroTitle: "Live battery monitoring for your Microsoft Modern Mobile Mouse, right in the tray.",
+        heroDesc: "<strong>4MBatteryTray</strong> is made specifically for the <strong>Microsoft Modern Mobile Mouse</strong>, reading GATT Battery Service (<code>0x180F</code> / <code>0x2A19</code>) over Bluetooth Low Energy to show live battery percentage, alerts, wake/backoff behavior, and usage history in your Windows system tray.",
+        downloadBtn: "Download v3.0 (.exe)",
         sourceBtn: "Inspect Source Code",
         previewTitle: "Interactive Tray Preview",
         previewHint: "Click battery pill to simulate",
         statusLabel: "Status",
-        statusNormal: "Connected via BLE",
+        statusNormal: "Connected via BLE • ~18.5d (rough)",
         statusLow: "Disconnected or sleeping • Retry in 15s (backoff)",
         refreshLabel: "Refresh Now",
-        settingsLabel: "Settings (Auto BLE • 15% • 5 min)",
+        statsLabel: "Battery Stats (Cell #1: 4.2d)",
+        settingsLabel: "Settings (15% • 5 min)",
         startupLabel: "Launch with Windows",
         taskbarLabel: "Windows System Tray",
         trayTitle: "Click to toggle connected / backoff state",
-        feat1Title: "Wake-Up Auto Refresh & Dynamic Icon",
-        feat1Desc: "Automatically refreshes shortly after Windows resumes from sleep (<code>PowerModes.Resume</code>) and renders live percentage inside a color-coded tray icon.",
-        feat2Title: "Exponential Backoff & Retry Visibility",
-        feat2Desc: "Backs off progressively (<code>15s</code> to <code>300s</code>, capped by refresh interval) when sleeping or disconnected, showing <code>Retry in Xs (backoff)</code> in menu and tooltip.",
-        feat3Title: "Multi-Device BLE Selection",
-        feat3Desc: "Pick <strong>Auto (Modern Mobile Mouse first)</strong> or pin a paired BLE battery device under <strong>Settings &rarr; BLE Device</strong>, saved in <code>settings.json</code>.",
-        feat4Title: "Low-Battery Alerts & Portable .exe",
-        feat4Desc: "Configurable thresholds (<code>10%</code>–<code>25%</code>) with <code>+5%</code> recovery hysteresis, optional startup, and a single-file <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) binary.",
+        feat1Title: "Tray Percentage & Smart Alerts",
+        feat1Desc: "Shows the mouse battery percentage inside a color-coded tray icon with configurable low-battery alerts (<code>10%</code>–<code>25%</code>), <code>+5%</code> recovery hysteresis, selectable poll intervals, and Windows startup support.",
+        feat2Title: "Wake-Up Sync & Backoff Retries",
+        feat2Desc: "Refreshes automatically after Windows wakes from sleep (<code>PowerModes.Resume</code>) and uses progressive backoff (<code>15s</code> to <code>300s</code>) with <code>Retry in Xs (backoff)</code> status while the mouse is asleep or disconnected.",
+        feat3Title: "History Log, Cell Counter & Estimate",
+        feat3Desc: "Records readings to <code>%AppData%\\4MBatteryTray\\battery-history.jsonl</code> (up to 5,000 entries), tracks active cell age with a reset counter, and shows a rough remaining battery estimate.",
+        feat4Title: "Lightweight & Zero-Bloat .exe",
+        feat4Desc: "Built as a single self-contained <code>4MBatteryTray.exe</code> (<code>net10.0-windows10.0.22621.0</code>, <code>win-x64</code>) with no installer or heavy background services—staying light on system resources.",
         howToTitle: "How to Run & SmartScreen Note",
-        step1: "Pair your <strong>Microsoft Modern Mobile Mouse</strong> or another BLE battery device via Windows Bluetooth settings (and optionally choose it under <strong>Settings &rarr; BLE Device</strong>).",
-        step2: "Download <code>4MBatteryTray.exe</code> from <strong>v2.0</strong> and run it directly—no installation wizard required.",
+        step1: "Pair and connect your <strong>Microsoft Modern Mobile Mouse</strong> with Windows over Bluetooth.",
+        step2: "Download <code>4MBatteryTray.exe</code> from <strong>v3.0</strong> and run it directly—no setup wizard needed.",
         step3: "Because the executable is not signed with a commercial code-signing certificate, Windows SmartScreen may appear on first launch; click <strong>More info</strong> &rarr; <strong>Run anyway</strong> to proceed.",
-        compatText: "<strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Microsoft Modern Mobile Mouse &amp; paired BLE battery devices (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).",
-        checksumTitle: "Release Integrity — SHA256 Checksum (<code>v2.0 / 4MBatteryTray.exe</code>)",
+        compatText: "<strong>Compatibility:</strong> Windows 10 / Windows 11 (x64) with Bluetooth Low Energy (BLE) &bull; Designed for the Microsoft Modern Mobile Mouse (GATT Battery Service <code>0x180F</code> / <code>0x2A19</code>).",
+        checksumTitle: "Release Integrity — SHA256 Checksum (<code>v3.0 / 4MBatteryTray.exe</code>)",
         copyHash: "Copy SHA256",
         copiedHash: "Copied!",
         authorCredit: "Maintained by <strong>Yusuf Can Kaleoğlu</strong>",
@@ -717,57 +722,58 @@
         footerDisclaimer: "<strong>Disclaimer &amp; Trademark Notice:</strong> <code>4MBatteryTray</code> is an independent, community-developed open-source utility and is <strong>not</strong> affiliated with, endorsed, sponsored, or supported by Microsoft Corporation. \"Microsoft\" and \"Modern Mobile Mouse\" are trademarks of Microsoft Corporation. Licensed under the MIT License."
       },
       tr: {
-        pageTitle: "4MBatteryTray — Modern Mobile Mouse ve BLE Cihazlar İçin Pil Göstergesi",
+        pageTitle: "4MBatteryTray — Microsoft Modern Mobile Mouse İçin Pil Göstergesi",
         langBtn: "EN",
         themeLight: "Açık Tema",
         themeDark: "Koyu Tema",
-        heroPill: "v2.0 • Açık Kaynak • Windows x64 • .NET 10",
-        heroTitle: "Microsoft Modern Mobile Mouse ve BLE cihazlarınızın pil yüzdesi sistem tepsinde.",
-        heroDesc: "<strong>4MBatteryTray v2.0</strong>; uykudan uyanma yenilemesi, görünür kademeli geri çekilme (exponential backoff) süresi ve çoklu BLE cihaz seçimiyle Bluetooth Low Energy GATT Pil Servisini (<code>0x180F</code> / <code>0x2A19</code>) okur—hafif, bağımsız ve gereksiz yük olmadan çalışır.",
-        downloadBtn: "İndir v2.0 (.exe)",
+        heroPill: "v3.0 • Açık Kaynak • Windows x64 • .NET 10",
+        heroTitle: "Modern Mobile Mouse için anlık pil takibin doğrudan görev çubuğunda.",
+        heroDesc: "<strong>4MBatteryTray</strong>, yalnızca <strong>Microsoft Modern Mobile Mouse</strong> için geliştirildi; BLE üzerinden GATT Pil Servisini (<code>0x180F</code> / <code>0x2A19</code>) okuyarak pil yüzdesini, uyarıları, uyku/deneme durumunu ve geçmiş istatistiklerini tepside gösterir.",
+        downloadBtn: "v3.0 İndir (.exe)",
         sourceBtn: "Kaynak Kodu İncele",
-        previewTitle: "Etkileşimli Tepsi Önizlemesi",
-        previewHint: "Simüle etmek için pil göstergesine tıkla",
+        previewTitle: "Tepsi Önizlemesi",
+        previewHint: "Durumu denemek için pil simgesine bas",
         statusLabel: "Durum",
-        statusNormal: "BLE ile bağlı",
-        statusLow: "Uykuda veya bağlı değil • 15sn sonra tekrar (backoff)",
+        statusNormal: "BLE bağlı • ~18,5 gün (tahmini)",
+        statusLow: "Uykuda veya bağlı değil • 15 sn sonra denenecek",
         refreshLabel: "Şimdi Yenile",
-        settingsLabel: "Ayarlar (Oto BLE • %15 • 5 dk)",
-        startupLabel: "Windows ile Başlat",
-        taskbarLabel: "Windows Sistem Tepsisi",
-        trayTitle: "Bağlı / backoff durumunu değiştirmek için tıkla",
-        feat1Title: "Uykudan Uyanma Yenilemesi ve Dinamik Simge",
-        feat1Desc: "Windows uykudan uyandığında (<code>PowerModes.Resume</code>) kısa toparlanma sonrası otomatik pil kontrolü yapar ve canlı yüzdeyi renk kodlu simgede gösterir.",
-        feat2Title: "Kademeli Geri Çekilme (Backoff) ve Süre Görünürlüğü",
-        feat2Desc: "Cihaz uykudayken veya bağlı değilken bekleme süresini (<code>15sn</code>–<code>300sn</code>, yenileme aralığıyla sınırlı) artırır; kalan deneme süresini menüde ve tooltip'te gösterir.",
-        feat3Title: "Çoklu BLE Cihaz Seçimi",
-        feat3Desc: "<strong>Ayarlar &rarr; BLE Device</strong> altından <strong>Auto</strong> modunu kullanabilir veya eşleşmiş bir BLE pil cihazını seçip <code>settings.json</code> içinde saklayabilirsiniz.",
-        feat4Title: "Düşük Pil Uyarıları ve Taşınabilir .exe",
-        feat4Desc: "<code>+5%</code> kurtarma histerezili eşikler (<code>10%</code>–<code>25%</code>), isteğe bağlı başlangıç kaydı ve tek dosyalı <code>net10.0-windows10.0.22621.0</code> (<code>win-x64</code>) çıktı.",
-        howToTitle: "Nasıl Çalıştırılır ve SmartScreen Notu",
-        step1: "<strong>Microsoft Modern Mobile Mouse</strong> veya başka bir BLE pil cihazını Windows Bluetooth ayarlarından eşleştirin (ve isterseniz <strong>Ayarlar &rarr; BLE Device</strong> menüsünden seçin).",
-        step2: "<strong>v2.0</strong> sürümünden <code>4MBatteryTray.exe</code> dosyasını indirip doğrudan çalıştırın; kurulum sihirbazı gerekmez.",
-        step3: "Uygulama ticari kod imzalama sertifikasıyla imzalanmadığı için ilk açılışta Windows SmartScreen uyarısı çıkabilir; devam etmek için <strong>Ek bilgi</strong> &rarr; <strong>Yine de çalıştır</strong> seçeneğine tıklayın.",
-        compatText: "<strong>Uyumluluk:</strong> Bluetooth Low Energy (BLE) destekli Windows 10 / Windows 11 (x64) &bull; Microsoft Modern Mobile Mouse ve eşleşmiş BLE pil cihazları (GATT Pil Servisi <code>0x180F</code> / <code>0x2A19</code>).",
-        checksumTitle: "Sürüm Bütünlüğü — SHA256 Doğrulama Kodu (<code>v2.0 / 4MBatteryTray.exe</code>)",
+        statsLabel: "Pil İstatistikleri (Pil #1: 4,2 gün)",
+        settingsLabel: "Ayarlar (%15 • 5 dk)",
+        startupLabel: "Windows ile Aç",
+        taskbarLabel: "Windows Görev Çubuğu",
+        trayTitle: "Bağlı ve uyku/deneme durumu arasında geçiş yap",
+        feat1Title: "Tepsi Yüzdesi ve Akıllı Uyarılar",
+        feat1Desc: "Renk değişen tepsi simgesinde pil yüzdesini gösterir; <code>%10</code>–<code>%25</code> uyarı eşiği, <code>+%5</code> toparlanma payı, yenileme aralığı seçimi ve Windows başlangıcında açılma sunar.",
+        feat2Title: "Uykudan Uyanma ve Kademeli Tekrar Deneme",
+        feat2Desc: "Bilgisayar uykudan uyandığında (<code>PowerModes.Resume</code>) durumu yeniler; fare uykudayken veya bağlı değilken bekleme süresini (<code>15 sn</code>–<code>300 sn</code>) artırıp kalan süreyi gösterir.",
+        feat3Title: "Geçmiş Kaydı, Pil Sayacı ve Süre Tahmini",
+        feat3Desc: "Okumaları <code>%AppData%\\4MBatteryTray\\battery-history.jsonl</code> dosyasına (en fazla 5.000 satır) işler, takılı pilin süresini sıfırlama sayacıyla tutar ve yaklaşık kalan ömür çıkarır.",
+        feat4Title: "Sade, Hafif ve Bilgisayarı Yormayan Yapı",
+        feat4Desc: "Kurulum gerektirmeyen tek <code>4MBatteryTray.exe</code> (<code>net10.0-windows10.0.22621.0</code>, <code>win-x64</code>) olarak çalışır; arka planda şişkin servisler açmadan sistemi yormaz.",
+        howToTitle: "Çalıştırma Adımları ve SmartScreen Uyarısı",
+        step1: "<strong>Microsoft Modern Mobile Mouse</strong> cihazınızı Windows Bluetooth ayarlarından eşleştirip bağlayın.",
+        step2: "<strong>v3.0</strong> sürümünden <code>4MBatteryTray.exe</code> dosyasını indirip doğrudan çalıştırın.",
+        step3: "Ticari kod imzalama sertifikası bulunmadığı için ilk açılışta Windows SmartScreen çıkabilir; devam etmek için <strong>Ek bilgi</strong> &rarr; <strong>Yine de çalıştır</strong> seçeneğine basın.",
+        compatText: "<strong>Uyumluluk:</strong> BLE destekli Windows 10 / Windows 11 (x64) &bull; Microsoft Modern Mobile Mouse (GATT Pil Servisi <code>0x180F</code> / <code>0x2A19</code>).",
+        checksumTitle: "Dosya Bütünlüğü — SHA256 Kodu (<code>v3.0 / 4MBatteryTray.exe</code>)",
         copyHash: "SHA256 Kopyala",
         copiedHash: "Kopyalandı!",
-        authorCredit: "Geliştirici: <strong>Yusuf Can Kaleoğlu</strong>",
-        issuesBtn: "Sorun Bildir",
-        contactBtn: "İletişim",
+        authorCredit: "Geliştiren: <strong>Yusuf Can Kaleoğlu</strong>",
+        issuesBtn: "Hata Bildir",
+        contactBtn: "İletişime Geç",
         contactHeading: "İletişim Formu",
-        contactSub: "<strong>Yusuf Can Kaleoğlu</strong> — Sayfada açık e-posta adresi göstermeden doğrudan mesaj gönderin.",
-        emailPlaceholder: "E-posta adresiniz",
-        msgPlaceholder: "Mesajınız...",
-        sendBtn: "Mesaj Gönder",
-        viewerTitle: "Kaynak Kod Görüntüleyici — CanK1906/4MBatteryTray",
+        contactSub: "<strong>Yusuf Can Kaleoğlu</strong> — E-posta adresini sayfada açık paylaşmadan doğrudan mesaj gönderebilirsin.",
+        emailPlaceholder: "E-posta adresin",
+        msgPlaceholder: "Mesajın...",
+        sendBtn: "Gönder",
+        viewerTitle: "Kaynak Kod — CanK1906/4MBatteryTray",
         copyCode: "Kodu Kopyala",
         copiedCode: "Kopyalandı!",
-        openRepo: "GitHub'da Aç",
-        loadingFiles: "Depo dosyaları GitHub'dan yükleniyor...",
-        loadingFile: "Dosya içeriği yükleniyor...",
-        loadError: "Dosya şu an GitHub üzerinden çekilemedi. Doğrudan görüntülemek için 'GitHub'da Aç' düğmesini kullanabilirsin.",
-        footerDisclaimer: "<strong>Yasal Uyarı ve Marka Bildirimi:</strong> <code>4MBatteryTray</code> bağımsız bir açık kaynak topluluk aracıdır; Microsoft Corporation ile resmi bir bağı yoktur, Microsoft tarafından desteklenmez veya onaylanmaz. \"Microsoft\" ve \"Modern Mobile Mouse\" Microsoft Corporation'ın ticari markalarıdır. MIT Lisansı ile sunulur."
+        openRepo: "GitHub'da Gör",
+        loadingFiles: "Depo dosyaları GitHub'dan çekiliyor...",
+        loadingFile: "Dosya okunuyor...",
+        loadError: "Dosya şu an GitHub'dan çekilemedi; 'GitHub'da Gör' ile doğrudan açabilirsin.",
+        footerDisclaimer: "<strong>Yasal Bilgilendirme:</strong> <code>4MBatteryTray</code> bağımsız, açık kaynaklı bir topluluk projesidir; Microsoft Corporation ile resmi bağlantısı yoktur ve Microsoft tarafından desteklenmez. \"Microsoft\" ve \"Modern Mobile Mouse\" Microsoft Corporation ticari markalarıdır. MIT Lisansı kapsamındadır."
       }
     };
 
@@ -831,6 +837,7 @@
       document.getElementById("previewHint").textContent = t.previewHint;
       document.getElementById("statusLabel").textContent = t.statusLabel;
       document.getElementById("refreshLabel").textContent = t.refreshLabel;
+      document.getElementById("statsLabel").textContent = t.statsLabel;
       document.getElementById("settingsLabel").textContent = t.settingsLabel;
       document.getElementById("startupLabel").textContent = t.startupLabel;
       document.getElementById("taskbarLabel").textContent = t.taskbarLabel;
