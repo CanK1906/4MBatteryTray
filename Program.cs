@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -34,9 +35,10 @@ internal static class Program
         StartupManager.EnsureRegistered(AppName);
 
         AppSettings settings = SettingsStore.Load();
+        var historyStore = new BatteryHistoryStore();
         var provider = new BleBatteryGattProvider();
         var batteryService = new BatteryDetectionService(provider);
-        Application.Run(new TrayBatteryApp(batteryService, settings));
+        Application.Run(new TrayBatteryApp(batteryService, settings, historyStore));
     }
 }
 
@@ -45,6 +47,8 @@ public sealed class AppSettings
     public int LowBatteryThreshold { get; set; } = 15;
     public int PollIntervalSeconds { get; set; } = 300;
     public string? SelectedDeviceId { get; set; }
+    public DateTime BatteryReplacementDate { get; set; } = DateTime.UtcNow;
+    public int BatteryReplacementCount { get; set; } = 1;
 }
 
 public static class SettingsStore
@@ -54,10 +58,15 @@ public static class SettingsStore
         WriteIndented = true
     };
 
-    private static string GetSettingsFilePath()
+    public static string GetAppDirectory()
     {
         string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        return Path.Combine(appData, Program.AppName, "settings.json");
+        return Path.Combine(appData, Program.AppName);
+    }
+
+    private static string GetSettingsFilePath()
+    {
+        return Path.Combine(GetAppDirectory(), "settings.json");
     }
 
     public static AppSettings Load()
@@ -92,6 +101,16 @@ public static class SettingsStore
                 loaded.SelectedDeviceId = null;
             }
 
+            if (loaded.BatteryReplacementDate == default || loaded.BatteryReplacementDate > DateTime.UtcNow.AddMinutes(5))
+            {
+                loaded.BatteryReplacementDate = DateTime.UtcNow;
+            }
+
+            if (loaded.BatteryReplacementCount < 1)
+            {
+                loaded.BatteryReplacementCount = 1;
+            }
+
             return loaded;
         }
         catch
@@ -117,6 +136,222 @@ public static class SettingsStore
         catch
         {
             // Ignore write errors so tray app continues running
+        }
+    }
+}
+
+public sealed record BatteryHistoryEntry(
+    DateTime TimestampUtc,
+    string DeviceId,
+    string DeviceName,
+    int Percentage,
+    DateTime CycleStartUtc);
+
+public sealed record BatteryStatsSummary(
+    int SampleCount,
+    double CellAgeDays,
+    int ReplacementCount,
+    string EstimatedRemainingText,
+    string LatestLogText);
+
+public sealed class BatteryHistoryStore
+{
+    private const int MaxStoredEntries = 5000;
+    private readonly object _fileLock = new();
+
+    private static string GetHistoryFilePath()
+    {
+        return Path.Combine(SettingsStore.GetAppDirectory(), "battery-history.jsonl");
+    }
+
+    public void Append(BatteryReading reading, DateTime cycleStartUtc)
+    {
+        try
+        {
+            var entry = new BatteryHistoryEntry(
+                DateTime.UtcNow,
+                reading.DeviceId,
+                reading.DeviceName,
+                reading.Percentage,
+                cycleStartUtc);
+
+            string line = JsonSerializer.Serialize(entry);
+
+            lock (_fileLock)
+            {
+                string path = GetHistoryFilePath();
+                string? dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.AppendAllText(path, line + Environment.NewLine);
+                TrimIfNeeded(path);
+            }
+        }
+        catch
+        {
+            // Do not interrupt tray monitoring on I/O errors
+        }
+    }
+
+    public IReadOnlyList<BatteryHistoryEntry> ReadRecent(string? deviceId, DateTime cycleStartUtc, int limit = 250)
+    {
+        try
+        {
+            string path = GetHistoryFilePath();
+            if (!File.Exists(path))
+            {
+                return [];
+            }
+
+            List<string> lines;
+            lock (_fileLock)
+            {
+                lines = File.ReadAllLines(path).ToList();
+            }
+
+            var list = new List<BatteryHistoryEntry>();
+            foreach (string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var item = JsonSerializer.Deserialize<BatteryHistoryEntry>(line);
+                    if (item is null || item.Percentage is < 0 or > 100)
+                    {
+                        continue;
+                    }
+
+                    bool matchesDevice = string.IsNullOrWhiteSpace(deviceId) ||
+                                         string.Equals(item.DeviceId, deviceId, StringComparison.OrdinalIgnoreCase);
+
+                    if (matchesDevice && item.TimestampUtc >= cycleStartUtc.AddMinutes(-1))
+                    {
+                        list.Add(item);
+                    }
+                }
+                catch
+                {
+                    // Skip malformed line
+                }
+            }
+
+            if (list.Count > limit)
+            {
+                return list.Skip(list.Count - limit).ToList();
+            }
+
+            return list;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    public BatteryStatsSummary BuildSummary(
+        BatteryReading? currentReading,
+        string? selectedDeviceId,
+        DateTime cycleStartUtc,
+        int replacementCount)
+    {
+        DateTime nowUtc = DateTime.UtcNow;
+        double ageDays = Math.Max(0, (nowUtc - cycleStartUtc).TotalDays);
+        IReadOnlyList<BatteryHistoryEntry> entries = ReadRecent(selectedDeviceId, cycleStartUtc, 500);
+
+        string latestText = entries.Count > 0
+            ? $"Log: {entries[^1].TimestampUtc.ToLocalTime():dd.MM HH:mm} ({entries[^1].Percentage}%)"
+            : "Log: No samples yet";
+
+        string estimateText = EstimateRemaining(currentReading, entries, cycleStartUtc, nowUtc);
+
+        return new BatteryStatsSummary(
+            SampleCount: entries.Count,
+            CellAgeDays: ageDays,
+            ReplacementCount: replacementCount,
+            EstimatedRemainingText: estimateText,
+            LatestLogText: latestText);
+    }
+
+    private static string EstimateRemaining(
+        BatteryReading? currentReading,
+        IReadOnlyList<BatteryHistoryEntry> entries,
+        DateTime cycleStartUtc,
+        DateTime nowUtc)
+    {
+        if (currentReading is null)
+        {
+            return "Est. left: N/A (offline)";
+        }
+
+        if (currentReading.Percentage <= 0)
+        {
+            return "Est. left: 0h";
+        }
+
+        if (entries.Count >= 2)
+        {
+            BatteryHistoryEntry first = entries[0];
+            BatteryHistoryEntry last = entries[^1];
+            double elapsedHours = (last.TimestampUtc - first.TimestampUtc).TotalHours;
+            int dropPercent = first.Percentage - last.Percentage;
+
+            if (elapsedHours >= 1.0 && dropPercent > 0)
+            {
+                double percentPerHour = dropPercent / elapsedHours;
+                double remainingHours = currentReading.Percentage / percentPerHour;
+                return FormatRemainingDuration(remainingHours);
+            }
+        }
+
+        double cycleHours = (nowUtc - cycleStartUtc).TotalHours;
+        int totalDrop = 100 - currentReading.Percentage;
+        if (cycleHours >= 2.0 && totalDrop > 0)
+        {
+            double percentPerHour = totalDrop / cycleHours;
+            double remainingHours = currentReading.Percentage / percentPerHour;
+            return FormatRemainingDuration(remainingHours);
+        }
+
+        return "Est. left: Collecting data...";
+    }
+
+    private static string FormatRemainingDuration(double hours)
+    {
+        if (double.IsNaN(hours) || double.IsInfinity(hours) || hours <= 0)
+        {
+            return "Est. left: N/A";
+        }
+
+        if (hours < 24)
+        {
+            int roundedHours = Math.Max(1, (int)Math.Round(hours));
+            return $"Est. left: ~{roundedHours}h (rough)";
+        }
+
+        double days = hours / 24.0;
+        if (days > 365)
+        {
+            return "Est. left: >1 yr (rough)";
+        }
+
+        string dayStr = days.ToString("0.0", CultureInfo.InvariantCulture);
+        return $"Est. left: ~{dayStr}d (rough)";
+    }
+
+    private static void TrimIfNeeded(string path)
+    {
+        string[] lines = File.ReadAllLines(path);
+        if (lines.Length > MaxStoredEntries)
+        {
+            string[] kept = lines.Skip(lines.Length - MaxStoredEntries).ToArray();
+            File.WriteAllLines(path, kept);
         }
     }
 }
@@ -464,6 +699,7 @@ public sealed class TrayBatteryApp : ApplicationContext
 
     private readonly BatteryDetectionService _batteryService;
     private readonly AppSettings _settings;
+    private readonly BatteryHistoryStore _historyStore;
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _pollTimer;
     private readonly Control _uiMarshalControl;
@@ -472,20 +708,29 @@ public sealed class TrayBatteryApp : ApplicationContext
     private readonly ToolStripMenuItem _startupMenuItem;
     private readonly ToolStripMenuItem _statusMenuItem;
     private readonly ToolStripMenuItem _deviceSubMenu;
+    private readonly ToolStripMenuItem _statsSubMenu;
+    private readonly ToolStripMenuItem _cellAgeItem;
+    private readonly ToolStripMenuItem _estimateItem;
+    private readonly ToolStripMenuItem _latestLogItem;
     private readonly ToolStripMenuItem[] _thresholdMenuItems;
     private readonly ToolStripMenuItem[] _intervalMenuItems;
 
     private ScanOutcome? _lastOutcome;
+    private BatteryStatsSummary? _lastStats;
     private Icon? _currentIcon;
     private bool _lowBatteryNotifiedForCurrentDrop;
     private bool _isExiting;
     private int _currentBackoffSeconds;
     private int? _activeRetryInSeconds;
 
-    public TrayBatteryApp(BatteryDetectionService batteryService, AppSettings settings)
+    public TrayBatteryApp(
+        BatteryDetectionService batteryService,
+        AppSettings settings,
+        BatteryHistoryStore historyStore)
     {
         _batteryService = batteryService;
         _settings = settings;
+        _historyStore = historyStore;
 
         // Hidden window handle used to safely marshal SystemEvents callbacks onto UI thread
         _uiMarshalControl = new Control();
@@ -509,6 +754,21 @@ public sealed class TrayBatteryApp : ApplicationContext
         _deviceSubMenu = new ToolStripMenuItem("BLE Device");
         _deviceSubMenu.DropDownOpening += async (_, _) => await PopulateDeviceMenuAsync();
         RebuildDeviceMenuItems([]);
+
+        _cellAgeItem = new ToolStripMenuItem("Cell #1: 0.0d") { Enabled = false };
+        _estimateItem = new ToolStripMenuItem("Est. left: Collecting data...") { Enabled = false };
+        _latestLogItem = new ToolStripMenuItem("Log: No samples yet") { Enabled = false };
+
+        var resetBatteryItem = new ToolStripMenuItem("New Battery Installed (Reset Counter)");
+        resetBatteryItem.Click += async (_, _) => await ResetBatteryCounterAsync();
+
+        _statsSubMenu = new ToolStripMenuItem("Battery Stats");
+        _statsSubMenu.DropDownOpening += (_, _) => RefreshStatsMenu();
+        _statsSubMenu.DropDownItems.Add(_cellAgeItem);
+        _statsSubMenu.DropDownItems.Add(_estimateItem);
+        _statsSubMenu.DropDownItems.Add(_latestLogItem);
+        _statsSubMenu.DropDownItems.Add(new ToolStripSeparator());
+        _statsSubMenu.DropDownItems.Add(resetBatteryItem);
 
         var thresholdSubMenu = new ToolStripMenuItem("Low Battery Threshold");
         _thresholdMenuItems = new ToolStripMenuItem[ThresholdOptions.Length];
@@ -547,6 +807,7 @@ public sealed class TrayBatteryApp : ApplicationContext
         contextMenu.Items.Add(_statusMenuItem);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Refresh Now", null, async (_, _) => await RefreshBatteryAsync(resetBackoff: true));
+        contextMenu.Items.Add(_statsSubMenu);
         contextMenu.Items.Add(settingsMenu);
         contextMenu.Items.Add(_startupMenuItem);
         contextMenu.Items.Add(new ToolStripSeparator());
@@ -564,8 +825,40 @@ public sealed class TrayBatteryApp : ApplicationContext
 
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
 
+        RefreshStatsMenu();
         _pollTimer.Start();
         _ = RefreshBatteryAsync(resetBackoff: true);
+    }
+
+    private async Task ResetBatteryCounterAsync()
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        _settings.BatteryReplacementCount += 1;
+        _settings.BatteryReplacementDate = DateTime.UtcNow;
+        SettingsStore.Save(_settings);
+        _lowBatteryNotifiedForCurrentDrop = false;
+
+        RefreshStatsMenu();
+        await RefreshBatteryAsync(resetBackoff: true);
+    }
+
+    private void RefreshStatsMenu()
+    {
+        BatteryStatsSummary summary = _historyStore.BuildSummary(
+            _lastOutcome?.Reading,
+            _settings.SelectedDeviceId,
+            _settings.BatteryReplacementDate,
+            _settings.BatteryReplacementCount);
+
+        _lastStats = summary;
+        string ageStr = summary.CellAgeDays.ToString("0.0", CultureInfo.InvariantCulture);
+        _cellAgeItem.Text = $"Cell #{summary.ReplacementCount}: {ageStr}d ({summary.SampleCount} logs)";
+        _estimateItem.Text = summary.EstimatedRemainingText;
+        _latestLogItem.Text = summary.LatestLogText;
     }
 
     private async Task PopulateDeviceMenuAsync()
@@ -636,6 +929,7 @@ public sealed class TrayBatteryApp : ApplicationContext
             RebuildDeviceMenuItems(_lastOutcome.DiscoveredDevices);
         }
 
+        RefreshStatsMenu();
         await RefreshBatteryAsync(resetBackoff: true);
     }
 
@@ -769,6 +1063,7 @@ public sealed class TrayBatteryApp : ApplicationContext
 
             if (outcome.Reading is not null)
             {
+                _historyStore.Append(outcome.Reading, _settings.BatteryReplacementDate);
                 _currentBackoffSeconds = 0;
                 _activeRetryInSeconds = null;
                 RescheduleTimer(_settings.PollIntervalSeconds);
@@ -784,6 +1079,7 @@ public sealed class TrayBatteryApp : ApplicationContext
                 RescheduleTimer(nextDelaySeconds);
             }
 
+            RefreshStatsMenu();
             UpdateTrayAppearance(outcome);
             EvaluateLowBatteryNotification(outcome.Reading);
         }
@@ -810,7 +1106,13 @@ public sealed class TrayBatteryApp : ApplicationContext
 
         if (outcome.Reading is not null)
         {
-            _notifyIcon.Text = TruncateNotifyText($"{outcome.Reading.DeviceName}: {outcome.Reading.Percentage}%");
+            string estSuffix = _lastStats is { EstimatedRemainingText: var est } &&
+                               !est.Contains("Collecting", StringComparison.OrdinalIgnoreCase) &&
+                               !est.Contains("N/A", StringComparison.OrdinalIgnoreCase)
+                ? $" • {est.Replace("Est. left: ", "", StringComparison.Ordinal)}"
+                : string.Empty;
+
+            _notifyIcon.Text = TruncateNotifyText($"{outcome.Reading.DeviceName}: {outcome.Reading.Percentage}%{estSuffix}");
         }
         else if (_activeRetryInSeconds.HasValue)
         {
